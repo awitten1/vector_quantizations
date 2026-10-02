@@ -9,17 +9,9 @@
 #include <utility>
 #include <vector>
 
-namespace vq {
+#include "vq/common.hpp"
 
-template<typename Float>
-Float l2_distance(const Float* v1, const Float* v2, int dim) {
-  Float distance = 0;
-  for (int i = 0; i < dim; ++i) {
-    auto diff = (v1[i] - v2[i]);
-    distance += diff * diff;
-  }
-  return distance;
-}
+namespace vq {
 
 // k-means++ seeding over n contiguous dim-dimensional points in `data`.
 // Writes k centroids to `centroids` (k * dim). Each new centroid is a training
@@ -168,15 +160,7 @@ public:
     const std::vector<Float> table = distance_table(query);
     std::vector<Float> distances(num_codes);
     adc_distances(table.data(), codes.data(), num_codes, distances.data());
-    std::vector<std::pair<int, Float>> results(num_codes);
-    for (int i = 0; i < num_codes; ++i) {
-      results[i] = {i, distances[i]};
-    }
-    n = std::min(n, num_codes);
-    std::partial_sort(results.begin(), results.begin() + n, results.end(),
-                      [](const auto& a, const auto& b) { return a.second < b.second; });
-    results.resize(n);
-    return results;
+    return top_n(distances, n);
   }
 
 private:

@@ -1,9 +1,11 @@
-// Minimal product quantization walkthrough: train, encode, decode, search.
+// Minimal walkthrough: product quantization (train, encode, decode, search),
+// then scalar quantization on the same data for comparison.
 #include <cstdio>
 #include <random>
 #include <vector>
 
 #include "vq/pq.hpp"
+#include "vq/sq.hpp"
 
 int main() {
   // 1. Data: n vectors of dimension dim, stored row-major in one flat array.
@@ -44,6 +46,26 @@ int main() {
 
   std::printf("\ntop 5 for a random query (approx distance vs exact distance):\n");
   for (auto [id, approx_dist] : pq.search(query.data(), codes, 5)) {
+    float exact = vq::l2_distance(query.data(), data.data() + id * dim, dim);
+    std::printf("  id %4d  approx %.3f  exact %.3f\n", id, approx_dist, exact);
+  }
+
+  // 6. Scalar quantization: each number independently becomes one byte
+  //    (256 levels between that dimension's training min and max).
+  vq::ScalarQuantizer<float> sq(data.data(), n, dim);
+  std::vector<uint8_t> sq_code = sq.encode(v);
+  std::vector<float> sq_approx(dim);
+  sq.decode(sq_code.data(), sq_approx.data());
+  std::printf("\nscalar quantization of vector 0:\ncode:     ");
+  for (uint8_t c : sq_code) std::printf("%3u ", c);
+  std::printf("  (%d bytes instead of %zu)\ndecoded:  ", dim, dim * sizeof(float));
+  for (int d = 0; d < dim; ++d) std::printf("%6.2f ", sq_approx[d]);
+  std::printf("\nsquared error: %.5f  (PQ: %.3f)\n", vq::l2_distance(v, sq_approx.data(), dim),
+              vq::l2_distance(v, approx.data(), dim));
+
+  std::vector<uint8_t> sq_codes = sq.encode(data.data(), n);
+  std::printf("\nSQ top 5 for the same query:\n");
+  for (auto [id, approx_dist] : sq.search(query.data(), sq_codes, 5)) {
     float exact = vq::l2_distance(query.data(), data.data() + id * dim, dim);
     std::printf("  id %4d  approx %.3f  exact %.3f\n", id, approx_dist, exact);
   }

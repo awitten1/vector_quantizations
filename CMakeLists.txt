@@ -14,7 +14,7 @@ option(VQ_BUILD_TESTS "Build tests" ON)
 option(VQ_BUILD_BENCHMARKS "Build benchmarks (requires Google Benchmark)" ON)
 
 # Core library
-add_library(vq src/vq.cpp src/pq.cpp)
+add_library(vq src/vq.cpp src/quantizers.cpp)
 add_library(vq::vq ALIAS vq)
 target_include_directories(vq PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "vq/pq.hpp"
+#include "vq/sq.hpp"
 
 namespace vq {
 
