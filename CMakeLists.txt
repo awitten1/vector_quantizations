@@ -11,6 +11,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 option(VQ_BUILD_TESTS "Build tests" ON)
+option(VQ_BUILD_BENCHMARKS "Build benchmarks (requires Google Benchmark)" ON)
 
 # Core library
 add_library(vq src/vq.cpp src/pq.cpp)
@@ -34,4 +35,11 @@ target_link_libraries(pq_example PRIVATE vq::vq)
 if(VQ_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+# Benchmarks
+if(VQ_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+  add_executable(bench_adc bench/bench_adc.cpp)
+  target_link_libraries(bench_adc PRIVATE vq::vq benchmark::benchmark)
 endif()

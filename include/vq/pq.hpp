@@ -147,20 +147,30 @@ public:
     return table;
   }
 
+  // Asymmetric distances from a query to num_codes encoded vectors, using the
+  // query's distance_table: out[i] = sum over sub of table[sub * k + code_i[sub]].
+  void adc_distances(const Float* table, const uint8_t* codes, int num_codes, Float* out) const {
+    for (int i = 0; i < num_codes; ++i) {
+      const uint8_t* code = codes + static_cast<size_t>(i) * m_;
+      Float distance = 0;
+      for (int sub = 0; sub < m_; ++sub) {
+        distance += table[sub * k_ + code[sub]];
+      }
+      out[i] = distance;
+    }
+  }
+
   // Top-n nearest encoded vectors by asymmetric distance, ascending.
   // codes is a flat array of num_codes * m bytes.
   std::vector<std::pair<int, Float>> search(const Float* query, const std::vector<uint8_t>& codes,
                                             int n) const {
     const int num_codes = static_cast<int>(codes.size() / m_);
     const std::vector<Float> table = distance_table(query);
+    std::vector<Float> distances(num_codes);
+    adc_distances(table.data(), codes.data(), num_codes, distances.data());
     std::vector<std::pair<int, Float>> results(num_codes);
     for (int i = 0; i < num_codes; ++i) {
-      const uint8_t* code = codes.data() + static_cast<size_t>(i) * m_;
-      Float distance = 0;
-      for (int sub = 0; sub < m_; ++sub) {
-        distance += table[sub * k_ + code[sub]];
-      }
-      results[i] = {i, distance};
+      results[i] = {i, distances[i]};
     }
     n = std::min(n, num_codes);
     std::partial_sort(results.begin(), results.begin() + n, results.end(),
