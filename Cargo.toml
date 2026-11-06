@@ -1,0 +1,28 @@
+[package]
+name = "vector_quantizations"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+default-run = "vq_cli"
+
+[lib]
+name = "vq"
+path = "src/lib.rs"
+bench = false # otherwise `cargo bench -- <args>` feeds <args> to libtest too
+
+[[bin]]
+name = "vq_cli"
+path = "src/bin/vq_cli.rs"
+bench = false
+
+[[example]]
+name = "pq_example"
+path = "examples/pq_example.rs"
+
+[[bench]]
+name = "bench_adc"
+harness = false
+
+[profile.release]
+codegen-units = 1
+lto = true

@@ -1,5 +1,0 @@
-foreach(name test_vq test_pq test_sq)
-  add_executable(${name} ${name}.cpp)
-  target_link_libraries(${name} PRIVATE vq::vq)
-  add_test(NAME ${name} COMMAND ${name})
-endforeach()
